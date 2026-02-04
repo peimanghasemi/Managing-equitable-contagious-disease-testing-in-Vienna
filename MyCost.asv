@@ -1,0 +1,179 @@
+function sol=MyCost()
+
+params=parameters();
+i=params.i;
+o=params.o;
+r=params.r;
+v=params.v;
+l=params.l;
+t=params.t;
+j=params.i;
+Ko=params.Ko;
+landa=params.landa;
+Pirt=params.Pirt;
+CL=params.CL;
+tij=params.tij;
+si=params.si;
+Tmax=params.Tmax;
+d=params.d;
+toi=params.toi;
+til=params.til;
+
+
+% Nvarx=3*numel(t);
+% Nvary=numel(i);
+% qo=randi(numel(o),numel(t),numel(i));
+% %qv=randi(numel(o),numel(t),numel(v));
+% qr=randi(numel(r),numel(t),numel(i));
+% qi=unifrnd(0,1,[numel(t),numel(i)]);
+
+%q5=unifrnd(0,1,[1,numel(o)]);
+
+qo=randi(numel(o),numel(t),numel(i));
+%qv=randi(numel(o),numel(t),numel(v));
+qr=randi(numel(r),numel(t),numel(i));
+qi=unifrnd(0,1,[numel(t),numel(i)]);
+
+
+ Zoirvt=zeros(numel(o),numel(i),numel(r),numel(v),numel(t));
+ y=zeros(numel(i),numel(r),numel(t));
+ Xoivt=zeros(numel(o),numel(i),numel(v),numel(t));
+ Xijvt=zeros(numel(i),numel(j),numel(v),numel(t));
+ Xilvt=zeros(numel(i),numel(l),numel(v),numel(t));
+Assign{numel(t),numel(v)}=[];
+Tours{numel(t),numel(v)}=[];
+ff1=0;
+ff2=0;
+Erro_Tmax=0;
+for tt=1:numel(t)
+    [~,qi_s]=sort(qi(tt,:));
+    %---------------------------------
+    OO={};
+    VV={};
+    RR={};
+    NotI=[];
+    %Find maximum visiting for 
+    for oo=1:numel(o)
+         fi=find(qo(tt,:)==oo);
+     if ~isempty(fi)
+             rfo=randperm(numel(fi));
+             OO{oo}=fi(1:rfo(1));
+
+         
+    
+             %----------------------------------------
+            %======================================
+
+           for ii=OO{oo}
+              VV= Ko{oo};
+              RV=randperm(numel(VV));
+              vv=VV(RV(1));
+               Zoirvt(oo,OO{oo},qr(tt,ii),vv,tt)=1;
+               NotI=[NotI,ii];
+              %--------------------------
+
+               Assign{tt,vv}=[Assign{tt,vv},ii];
+           end
+
+
+                %============================================
+            for vp=Ko{oo}
+                if ~isempty(Assign{tt,vp})
+                   LL= randperm(numel(l));
+                   bb=qi_s;
+                  a= bb(find(ismember(bb,Assign{tt,vp})));
+                   Tours{tt,vp}=[oo,a,LL(1)];
+                   %============Calcultion of total travel time ===========
+                   AA=Tours{tt,vp};
+                   zz=0;
+                     for ii=1:numel(Tours{tt,vp})
+                         if ii==1
+                         zz=zz+ toi((AA(ii)),AA(ii+1))+si(AA(ii)) ; 
+                         Xoivt(AA(ii),AA(ii+1),vp,tt)=1;
+                         elseif ii==numel(Tours{tt,vp})
+                             zz=zz+til((AA(ii-1)),AA(ii)) ;
+                             Xilvt(AA(ii-1),AA(ii),vp,tt)=1;
+                         else
+                             zz=zz+tij((AA(ii)),AA(ii+1))+si(AA(ii-1)) ; 
+                             Xijvt(AA(ii),AA(ii+1),vp,tt)=1;
+                         end
+
+
+
+
+                     end
+                     Erro_Tmax= Erro_Tmax+max( ((zz)/Tmax )-1,0) ;
+
+                   %=========================
+                end
+            end
+
+    
+    
+    
+    %===========================================================
+%     for vv=1:numel(v)
+%        if sum(
+%         
+%     end
+    %=====================================================
+    
+             end
+    end
+
+fn=find(~ismember(i,NotI));
+for jj=fn
+    if tt>1
+        y(jj,qr(tt,jj),tt)=y(jj,qr(tt,jj),tt-1)+(d(jj,qr(tt,jj),tt));
+    else
+        y(jj,qr(tt,jj),tt)=(d(jj,qr(tt,jj),tt));
+    end
+end
+
+
+
+
+
+%--------------objective function---------------
+
+    for ii=1:numel(i)
+        for rr=1:numel(r)
+            %----------------------------------
+            for vv=1:numel(v)
+               if sum(Zoirvt(:,ii,rr,vv,tt))>0
+                   ff1=ff1+(landa(rr)*Pirt(ii,rr,tt))/tt;
+               end
+            end
+            %-------------------------------------
+            ff2=ff2+(d(ii,rr,tt) *y(ii,rr,tt))/  sum(d(:,rr,tt));
+
+            
+        end
+    end
+
+        
+
+
+
+
+
+%--------------------------------------------
+
+
+end
+sol.y=y;
+sol.ff1=ff1;
+sol.ff2=ff2;
+sol. Erro_Tmax= Erro_Tmax;
+sol. Tours= Tours;
+sol.Zoirvt=Zoirvt;
+sol.Xoivt=Xoivt;
+sol.Xijvt=Xijvt;
+sol.Xilvt=Xilvt;
+
+
+
+
+
+
+end
